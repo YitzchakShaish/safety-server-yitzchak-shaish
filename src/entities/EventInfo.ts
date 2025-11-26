@@ -1,6 +1,14 @@
 import { Entity, Column } from "typeorm";
 import { BaseEntity } from "./BaseEntity";
-import { UnitActivityType, PersonalActivityType, Category, Location, EventSeverity, EventResult, WeatherCondition } from "../enums/EventEnums";
+import { 
+  UnitActivityType, 
+  PersonalActivityType, 
+  Category, 
+  Location, 
+  EventSeverity, 
+  EventResult, 
+  WeatherCondition 
+} from "../enums/EventEnums";
 
 @Entity()
 export class EventInfo extends BaseEntity {
@@ -13,24 +21,24 @@ export class EventInfo extends BaseEntity {
   @Column("text")
   eventDescription: string;
 
-  @Column({ type: "enum", enum: UnitActivityType })
+  @Column({ type: "text" })
   unitActivityType: UnitActivityType;
 
-  @Column({ type: "enum", enum: PersonalActivityType })
+  @Column({ type: "text" })
   personalActivityType: PersonalActivityType;
 
-  @Column({ type: "enum", enum: Category })
+  @Column({ type: "text" })
   category: Category;
 
-  @Column({ type: "enum", enum: Location })
+  @Column({ type: "text" })
   location: Location;
 
-  @Column({ type: "enum", enum: EventSeverity })
+  @Column({ type: "text" })
   eventSeverity: EventSeverity;
 
-  @Column({ type: "enum", enum: EventResult })
+  @Column({ type: "text" })
   eventResult: EventResult;
 
-  @Column({ type: "enum", enum: WeatherCondition })
+  @Column({ type: "text" })
   weatherCondition: WeatherCondition;
 }

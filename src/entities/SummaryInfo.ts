@@ -4,7 +4,7 @@ import { InjuryLevel, EventStatus } from "../enums/EventEnums";
 
 @Entity()
 export class SummaryInfo extends BaseEntity {
-  @Column({ type: "enum", enum: InjuryLevel })
+  @Column({ type: "text" })
   injuryLevel: InjuryLevel;
 
   @Column("text")
@@ -16,6 +16,6 @@ export class SummaryInfo extends BaseEntity {
   @Column()
   approval: boolean;
 
-  @Column({ type: "enum", enum: EventStatus })
+  @Column({ type: "text" })
   eventStatus: EventStatus;
 }

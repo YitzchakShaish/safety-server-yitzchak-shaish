@@ -23,9 +23,9 @@ export class EventReport {
   @JoinColumn()
   summaryInfo: SummaryInfo;
 
-  @CreateDateColumn({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })
+  @CreateDateColumn()
   createdAt: Date;
 
-  @UpdateDateColumn({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })
+  @UpdateDateColumn()
   updatedAt: Date;
 }

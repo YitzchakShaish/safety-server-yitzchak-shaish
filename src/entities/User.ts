@@ -10,9 +10,9 @@ export class User extends BaseEntity {
   fullName: string;
 
   @Column()
-  phone: string;
+  email: string;
 
-  @Column({ type: "enum", enum: MilitaryRank, default: MilitaryRank.Tzurai })
+  @Column({ type: "text", default: MilitaryRank.Tzurai })
   rank: MilitaryRank;
 
   @OneToMany(() => EventReport, report => report.reporter)
