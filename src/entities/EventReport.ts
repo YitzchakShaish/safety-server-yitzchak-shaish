@@ -8,11 +8,11 @@ import { User } from "./User";
 export class EventReport {
   @PrimaryGeneratedColumn("uuid")
   id: string;
-
+  
   @ManyToOne(() => User, user => user.reports, { eager: true })
   reporter: User;
-
-  @ManyToOne(() => ReporterProfile, profile => profile.reports, { eager: true })
+  
+  @ManyToOne(() => ReporterProfile, profile => profile.reports, { cascade: true, eager: true })
   reporterProfile: ReporterProfile;
 
   @OneToOne(() => EventInfo, { cascade: true, eager: true })

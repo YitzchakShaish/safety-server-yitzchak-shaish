@@ -1,11 +1,12 @@
-import { Entity, Column, OneToMany } from "typeorm";
-import { BaseEntity } from "./BaseEntity";
+import { Entity, Column, OneToMany, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from "typeorm";
 import { ReporterProfile } from "./ReporterProfile";
 import { MilitaryRank } from "../enums/EventEnums";
 import { EventReport } from "./EventReport";
 
 @Entity()
-export class User extends BaseEntity {
+export class User {
+  @PrimaryGeneratedColumn("uuid")
+  id: string;
   @Column()
   fullName: string;
 
@@ -20,4 +21,9 @@ export class User extends BaseEntity {
 
   @OneToMany(() => ReporterProfile, profile => profile.user)
   reporterProfiles: ReporterProfile[];
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

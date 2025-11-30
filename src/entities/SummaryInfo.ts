@@ -1,9 +1,11 @@
-import { Entity, Column } from "typeorm";
-import { BaseEntity } from "./BaseEntity";
+import { Entity, Column, PrimaryGeneratedColumn } from "typeorm";
 import { InjuryLevel, EventStatus } from "../enums/EventEnums";
 
 @Entity()
-export class SummaryInfo extends BaseEntity {
+export class SummaryInfo {
+  @PrimaryGeneratedColumn()
+  id: number;
+  
   @Column({ type: "text" })
   injuryLevel: InjuryLevel;
 

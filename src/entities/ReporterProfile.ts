@@ -1,10 +1,12 @@
-import { Entity, Column, ManyToOne, OneToMany } from "typeorm";
-import { BaseEntity } from "./BaseEntity";
+import { Entity, Column, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { User } from "./User";
 import { EventReport } from "./EventReport";
 
 @Entity()
-export class ReporterProfile extends BaseEntity {
+export class ReporterProfile {
+  @PrimaryGeneratedColumn()
+  id: number;
+  
   @ManyToOne(() => User, user => user.reporterProfiles)
   user: User;
 
