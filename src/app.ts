@@ -5,6 +5,7 @@ import { AppDataSource } from "./config/datasource";
 import { config } from "./config"
 import authRouter from "./routes/auth.router"
 import userRouter from "./routes/user.router"
+import eventRouter from "./routes/eventReport.router"
 
 
 
@@ -18,6 +19,8 @@ app.use("/images", express.static("public/images"));
 app.use(express.json());
 app.use('/auth', authRouter);
 app.use('/users', userRouter);
+app.use('/', eventRouter);
+
 app.use((_req, res) => {
   res.status(404).json({ message: "הנתיב הזה לא קיים במערכת" });
 });

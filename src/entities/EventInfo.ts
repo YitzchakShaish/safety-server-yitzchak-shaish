@@ -1,17 +1,19 @@
-import { Entity, Column } from "typeorm";
-import { BaseEntity } from "./BaseEntity";
-import { 
-  UnitActivityType, 
-  PersonalActivityType, 
-  Category, 
-  Location, 
-  EventSeverity, 
-  EventResult, 
-  WeatherCondition 
+import { Entity, Column, PrimaryGeneratedColumn } from "typeorm";
+import {
+  UnitActivityType,
+  PersonalActivityType,
+  Category,
+  Location,
+  EventSeverity,
+  EventResult,
+  WeatherCondition
 } from "../enums/EventEnums";
 
 @Entity()
-export class EventInfo extends BaseEntity {
+export class EventInfo {
+  @PrimaryGeneratedColumn()
+  id: number;
+
   @Column({ type: "date" })
   eventDate: string;
 
