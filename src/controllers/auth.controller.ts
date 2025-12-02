@@ -19,7 +19,7 @@ export async function login(req: Request, res: Response) {
     try {
         const user = await AuthService.login(userDto);
         const token = generateToken({ id: user.id, rank: user.rank, email: user.email });
-        res.cookie('token', token, { httpOnly: true, });
+        res.cookie('token', token, { httpOnly: true,  sameSite: "lax"});
         return res.status(200).json({ message: "התחברת בהצלחה", user, token });
     } catch (err: any) {
         return res.status(404).json({ message: err.message });

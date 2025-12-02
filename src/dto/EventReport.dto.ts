@@ -7,7 +7,7 @@ import { SummaryInfoDto } from "./SummaryInfo.dto";
 export class EventReportDto {
     @ValidateNested()
     @Type(() => ReporterProfileDto)
-    reporterProfile: ReporterProfileDto;
+    reporterInfo: ReporterProfileDto;
 
     @ValidateNested()
     @Type(() => EventInfoDto)

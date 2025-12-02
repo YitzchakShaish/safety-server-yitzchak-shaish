@@ -11,18 +11,18 @@ export class EventReportService {
 
         let reporterProfile;
 
-        if (eventReportDto.reporterProfile) {
+        if (eventReportDto.reporterInfo) {
             reporterProfile = await profileRepo.findOne({
                 where: {
                     user: { id: reporterId },
-                    unit: eventReportDto.reporterProfile.unit,
-                    subUnit: eventReportDto.reporterProfile.subUnit,
-                    position: eventReportDto.reporterProfile.position
+                    unit: eventReportDto.reporterInfo.unit,
+                    subUnit: eventReportDto.reporterInfo.subUnit,
+                    position: eventReportDto.reporterInfo.position
                 }
             });
 
             if (!reporterProfile) {
-                reporterProfile = profileRepo.create(eventReportDto.reporterProfile);
+                reporterProfile = profileRepo.create(eventReportDto.reporterInfo);
                 reporterProfile.user = { id: reporterId } as any;
                 await profileRepo.save(reporterProfile);
             }
@@ -33,6 +33,7 @@ export class EventReportService {
             reporterProfile,
             eventInfo: eventReportDto.eventInfo,
             summaryInfo: eventReportDto.summaryInfo,
+            createdAt: eventReportDto.reporterInfo.reportDate
         } as DeepPartial<EventReport>);
 
         await eventRepo.save(eventReport);

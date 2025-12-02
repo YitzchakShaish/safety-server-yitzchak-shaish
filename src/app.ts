@@ -6,7 +6,7 @@ import { config } from "./config"
 import authRouter from "./routes/auth.router"
 import userRouter from "./routes/user.router"
 import eventRouter from "./routes/eventReport.router"
-
+import cookieParser from "cookie-parser";
 
 
 const app: express.Application = express();
@@ -15,6 +15,7 @@ app.use(cors({
   origin: true,
   credentials: true,
 }));
+app.use(cookieParser());
 app.use("/images", express.static("public/images"));
 app.use(express.json());
 app.use('/auth', authRouter);

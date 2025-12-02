@@ -7,9 +7,10 @@ export function checkAuth(req: Request, res: Response, next: NextFunction) {
         req.headers["authorization"]?.split(" ")[1] || // Bearer token
         req.cookies?.token ||
         req.body?.token;
+    console.log(token)
 
     if (!token) {
-        return res.status(401).json({ message: "Missing token" });
+        return res.status(401).json({ message: "אין טוקן – התחבר מחדש" });
     }
 
     try {
@@ -18,6 +19,6 @@ export function checkAuth(req: Request, res: Response, next: NextFunction) {
 
         return next();
     } catch (err) {
-        return res.status(403).json({ message: "Token not valid" });
+        return res.status(403).json({ message: "טוקן לא תקין – אין גישה" });
     }
 }

@@ -6,11 +6,11 @@ export class SummaryInfo {
   @PrimaryGeneratedColumn()
   id: number;
   
-  @Column({ type: "text" })
-  injuryLevel: InjuryLevel;
+  @Column({ type: 'text', nullable: true })
+  injuryLevel?: InjuryLevel;
 
   @Column("text")
-  injuryDetails: string;
+  injuryDetails?: string;
 
   @Column("text")
   recommendations: string;
