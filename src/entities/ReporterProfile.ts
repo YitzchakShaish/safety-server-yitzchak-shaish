@@ -6,12 +6,15 @@ import { EventReport } from "./EventReport";
 export class ReporterProfile {
   @PrimaryGeneratedColumn()
   id: number;
-  
+
   @ManyToOne(() => User, user => user.reporterProfiles)
   user: User;
 
   @Column()
   unit: string;
+
+  @Column({ nullable: true })
+  phone: string;
 
   @Column()
   subUnit: string;

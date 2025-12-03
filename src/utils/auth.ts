@@ -8,6 +8,6 @@ export function generateToken(payload: object, secret: string = secretString): s
     return jwt.sign(payload, secret, { expiresIn: "1h" });
 }
 
-export function verifyToken(token: string, secret: string = secretString): { id: string } {
+export function verifyToken(token: string, secret: string = secretString): { id: string, rank: string } {
     return jwt.verify(token, secret);
 }

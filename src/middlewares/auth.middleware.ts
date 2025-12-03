@@ -15,10 +15,24 @@ export function checkAuth(req: Request, res: Response, next: NextFunction) {
 
     try {
         const decoded = verifyToken(token);
-        req.user = { id: decoded.id };
+        req.user = { id: decoded.id, rank: decoded.rank };
 
         return next();
     } catch (err) {
         return res.status(403).json({ message: "טוקן לא תקין – אין גישה" });
     }
+}
+
+export function checkRank(ranks: string[]) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user || !ranks.includes(req.user.rank)) {
+        return res.status(403).json({ message: "אין הרשאה לבצע את הפעולה" });
+      }
+
+      return next();
+    } catch (err) {
+      return res.status(403).json({ message: "טוקן לא תקין – אין גישה" });
+    }
+  };
 }

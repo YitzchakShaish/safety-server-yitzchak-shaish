@@ -1,10 +1,10 @@
-import { 
-  IsString, 
-  IsNotEmpty, 
-  IsEnum 
+import {
+  IsString,
+  IsNotEmpty,
+  IsEnum
 } from "class-validator";
 
-import { 
+import {
   UnitActivityType,
   PersonalActivityType,
   Category,
@@ -13,10 +13,12 @@ import {
   EventResult,
   WeatherCondition
 } from "../enums/EventEnums";
+import { IsPastOrPresentDate } from "../validators/isPastOrPresentDate.validator";
 
 export class EventInfoDto {
   @IsString({ message: 'תאריך האירוע חייב להיות מחרוזת' })
   @IsNotEmpty({ message: 'תאריך האירוע חובה' })
+  @IsPastOrPresentDate({ message: 'תאריך האירוע לא יכול להיות בעתיד' })
   eventDate: string;
 
   @IsString({ message: 'שעת האירוע חייבת להיות מחרוזת' })

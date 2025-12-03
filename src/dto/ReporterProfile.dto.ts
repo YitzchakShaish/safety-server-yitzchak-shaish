@@ -1,4 +1,5 @@
 import { IsString, IsNotEmpty, IsOptional, IsDateString } from "class-validator";
+import { IsPastOrPresentDate } from "../validators/isPastOrPresentDate.validator";
 
 export class ReporterProfileDto {
   @IsString({ message: 'שם מלא חייב להיות מחרוזת' })
@@ -23,6 +24,7 @@ export class ReporterProfileDto {
 
   @IsOptional()
   @IsDateString({}, { message: 'תאריך דיווח חייב להיות תאריך תקין' })
+  @IsPastOrPresentDate({ message: 'תאריך הדיווח לא יכול להיות בעתיד' })
   reportDate?: Date;
 
   @IsOptional()
