@@ -26,4 +26,10 @@ export class User {
 
   @UpdateDateColumn()
   updatedAt: Date;
+  @Column({ type: "int", default: 0 })
+  updatesCount: number;
+
+  @Column({ type: "int", default: 0 })
+  deletesCount: number;
+
 }

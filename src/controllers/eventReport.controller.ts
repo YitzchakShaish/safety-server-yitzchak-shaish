@@ -1,9 +1,10 @@
 import { Request, Response } from "express";
-
+import { validate as isUUID } from "uuid";
 import { EventReportDto } from "../dto/EventReport.dto";
 import { EventReportService } from "../services/eventReport.service";
 import { AppDataSource } from "../config/datasource";
 import { User } from "../entities/User";
+import { EventReportDtoWithId } from "../dto/EventReportWithId.dto";
 
 export class EventReportController {
 
@@ -51,7 +52,7 @@ export class EventReportController {
         dateTo: dateTo ? String(dateTo) : undefined,
       };
 
-  
+
       const reports = await EventReportService.getAll({ page: pageNum, perPage: perPageNum, filters, user: req.user! });
 
       return res.status(200).json({
@@ -63,6 +64,50 @@ export class EventReportController {
       return res.status(500).json({ message: err.message || "שגיאה פנימית בשרת" });
     }
   }
+  static async updateReport(req: Request, res: Response) {
+    try {
+      const reporterId = req.user!.id;
+      const userRepo = AppDataSource.getRepository(User);
+      const user = await userRepo.findOne({ where: { id: reporterId } });
+      console.log(reporterId)
+      const eventReportDtoWithId: EventReportDtoWithId = req.body;
+      console.log(eventReportDtoWithId)
+
+      const report = await EventReportService.update(eventReportDtoWithId, reporterId);
+
+      return res.status(200).json({
+        message: "דיווח האירוע עודכן בהצלחה",
+        data: report,
+        user
+      });
+
+    } catch (err: any) {
+      return res.status(500).json({ message: err.message || "שגיאה פנימית בשרת" });
+    }
+  }
+
+
+
+  static async deleteReport(req: Request, res: Response) {
+    try {
+      const reporterId = req.user!.id;
+      const eventReportId = req.params.id; 
+
+      if (!eventReportId || !isUUID(eventReportId)) {
+        return res.status(400).json({ message: "ID לא חוקי" });
+      }
+
+      const report = await EventReportService.delete(eventReportId, reporterId);
+      return res.status(204).json({
+        message: "דיווח האירוע נמחק בהצלחה",
+        data: report,
+      });
+
+    } catch (err: any) {
+      return res.status(500).json({ message: err.message || "שגיאה פנימית בשרת" });
+    }
+  }
+
 }
 
 

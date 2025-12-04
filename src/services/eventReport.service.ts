@@ -5,6 +5,8 @@ import { ReporterProfile } from "../entities/ReporterProfile";
 import { DeepPartial } from "typeorm";
 import { updateRankIfNeeded } from "./rank.service";
 import { formatEventReportForClient } from "../utils/formatEventReport";
+import { EventReportDtoWithId } from "../dto/EventReportWithId.dto";
+import { User } from "../entities/User";
 
 export class EventReportService {
     static async create(eventReportDto: EventReportDto, reporterId: string) {
@@ -41,6 +43,37 @@ export class EventReportService {
         await updateRankIfNeeded(reporterId);
         await eventRepo.save(eventReport);
         return eventReport;
+    }
+    static async update(eventReportDto: EventReportDtoWithId, reporterId: string) {
+        const eventRepo = AppDataSource.getRepository(EventReport);
+        const existingReport = await eventRepo.findOne({
+            where: { id: eventReportDto.id },
+            relations: ["reporterProfile"]
+        });
+        if (!existingReport) throw new Error("האירוע לא נמצא");
+
+
+        existingReport.eventInfo = { ...existingReport.eventInfo, ...eventReportDto.eventInfo };
+        existingReport.summaryInfo = { ...existingReport.summaryInfo, ...eventReportDto.summaryInfo };
+        existingReport.reporterProfile = { ...existingReport.reporterProfile, ...eventReportDto.reporterInfo };
+        await AppDataSource.getRepository(User)
+            .increment({ id: reporterId }, "updatesCount", 1);
+
+        await eventRepo.save(existingReport);
+        return existingReport;
+    }
+    static async delete(eventReportId: string, reporterId: string) {
+        const eventRepo = AppDataSource.getRepository(EventReport);
+        const existingReport = await eventRepo.findOneBy({ id: eventReportId });
+        if (existingReport) {
+            await eventRepo.remove(existingReport);
+            await AppDataSource.getRepository(User)
+                .increment({ id: reporterId }, "deletesCount", 1);
+        }
+        if (!existingReport) throw new Error("האירוע לא נמצא");
+
+
+        return existingReport;
     }
 
     static async getAll(options: {

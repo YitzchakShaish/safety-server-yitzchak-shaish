@@ -26,8 +26,8 @@ export function formatEventReportForClient(report: EventReport) {
     },
     summaryInfo: {
       eventStatus: report.summaryInfo?.eventStatus || "",
-      injuryLevel: report.summaryInfo?.injuryLevel || "",
-      injuryDetails: report.summaryInfo?.injuryDetails || "",
+      injuryLevel: report.summaryInfo?.injuryLevel,
+      injuryDetails: report.summaryInfo?.injuryDetails,
       recommendations: report.summaryInfo?.recommendations || "",
       approval: report.summaryInfo?.approval || false,
     },
