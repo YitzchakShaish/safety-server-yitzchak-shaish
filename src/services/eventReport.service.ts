@@ -5,6 +5,7 @@ import { ReporterProfile } from "../entities/ReporterProfile";
 import { DeepPartial } from "typeorm";
 import { updateRankIfNeeded } from "./rank.service";
 import { formatEventReportForClient } from "../utils/formatEventReport";
+
 export class EventReportService {
     static async create(eventReportDto: EventReportDto, reporterId: string) {
         const eventRepo = AppDataSource.getRepository(EventReport);
@@ -46,11 +47,12 @@ export class EventReportService {
         page: number;
         perPage: number;
         filters?: {
-            startDate?: string;
-            endDate?: string;
+            q?: string;
+            dateFrom?: string;
+            dateTo?: string;
             status?: string;
         };
-        user: { id: string, rank: string }
+        user: { id: string; rank: string };
     }) {
         const { page, perPage, filters, user } = options;
         const repo = AppDataSource.getRepository(EventReport);
@@ -63,15 +65,27 @@ export class EventReportService {
             .leftJoinAndSelect("report.summaryInfo", "summaryInfo")
             .orderBy("report.createdAt", "DESC");
 
-        if (filters?.startDate) {
-            query.andWhere("report.createdAt >= :startDate", { startDate: filters.startDate });
-        }
-        if (filters?.endDate) {
-            query.andWhere("report.createdAt <= :endDate", { endDate: filters.endDate });
+        if (filters?.dateFrom) {
+            query.andWhere("report.createdAt >= :dateFrom", {
+                dateFrom: filters.dateFrom,
+            });
         }
 
-        if (filters?.status) {
-            query.andWhere("report.summaryInfo_status = :status", { status: filters.status });
+        if (filters?.dateTo) {
+            query.andWhere("report.createdAt <= :dateTo", {
+                dateTo: filters.dateTo,
+            });
+        }
+
+        if (filters?.q) {
+            const q = `%${filters.q}%`;
+
+            query.andWhere(`
+   eventInfo.category LIKE :q
+    OR summaryInfo.eventStatus LIKE :q
+    OR profile.subUnit LIKE :q
+    OR reporter.fullName LIKE :q
+  `, { q });
         }
 
         if (user.rank === "טוראי") {
@@ -96,5 +110,3 @@ export class EventReportService {
         };
     }
 }
-
-
