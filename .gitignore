@@ -5,3 +5,4 @@ package-lock.json
 *.sqlite
 *.sqlite3
 /data/*.sqlite
+public
