@@ -14,7 +14,4 @@ export class EventImage {
 
   @ManyToOne(() => EventReport, (report) => report.images, { onDelete: "CASCADE" })
   report: EventReport;
-
-  @Column()
-  reportId: number;
 }

@@ -96,6 +96,7 @@ export class EventReportService {
             .leftJoinAndSelect("report.reporterProfile", "profile")
             .leftJoinAndSelect("report.eventInfo", "eventInfo")
             .leftJoinAndSelect("report.summaryInfo", "summaryInfo")
+            .leftJoinAndSelect("report.images", "images")
             .orderBy("report.createdAt", "DESC");
 
         if (filters?.dateFrom) {

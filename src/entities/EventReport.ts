@@ -24,7 +24,7 @@ export class EventReport {
   @JoinColumn()
   summaryInfo: SummaryInfo;
 
-  @OneToMany(() => EventImage, (image) => image.report)
+  @OneToMany(() => EventImage, (image) => image.report, { cascade: true, eager: true })
   images: EventImage[];
 
   @CreateDateColumn()

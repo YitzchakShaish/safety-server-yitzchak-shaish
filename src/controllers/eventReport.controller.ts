@@ -98,7 +98,7 @@ export class EventReportController {
       }
 
       const report = await EventReportService.delete(eventReportId, reporterId);
-      return res.status(204).json({
+      return res.status(200).json({
         message: "דיווח האירוע נמחק בהצלחה",
         data: report,
       });

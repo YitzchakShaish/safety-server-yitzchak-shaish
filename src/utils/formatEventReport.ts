@@ -31,5 +31,6 @@ export function formatEventReportForClient(report: EventReport) {
       recommendations: report.summaryInfo?.recommendations || "",
       approval: report.summaryInfo?.approval || false,
     },
+   images: report.images || [],
   };
 }

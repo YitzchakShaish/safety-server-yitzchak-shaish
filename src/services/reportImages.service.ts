@@ -17,7 +17,7 @@ export class ReportImagesService {
       const newImage = imgRepo.create({
         report,
         fileName: file.filename,
-        filePath: `/uploads/${file.filename}`,
+        filePath: `http://localhost:3000/uploads/${file.filename}`,
       });
 
       results.push(await imgRepo.save(newImage));
