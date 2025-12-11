@@ -8,6 +8,7 @@ import userRouter from "./routes/user.router"
 import eventRouter from "./routes/eventReport.router"
 import cookieParser from "cookie-parser";
 import reportImagesRoutes from "./routes/reportImages.routes";
+import overviewRoutes from "./routes/overview.routes";
 
 const app: express.Application = express();
 
@@ -23,6 +24,7 @@ app.use('/auth', authRouter);
 app.use('/', eventRouter);
 app.use('/reports', reportImagesRoutes);
 app.use('/users', userRouter);
+app.use('/', overviewRoutes);
 
 app.use((_req, res) => {
   res.status(404).json({ message: "הנתיב הזה לא קיים במערכת" });

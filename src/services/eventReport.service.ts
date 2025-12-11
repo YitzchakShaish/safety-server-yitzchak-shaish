@@ -11,9 +11,14 @@ import { EventReportDtoWithId } from "../dto/EventReportWithId.dto";
 import { User } from "../entities/User";
 
 export class EventReportService {
+    private static eventRepo = AppDataSource.getRepository(EventReport);
+    private static profileRepo = AppDataSource.getRepository(ReporterProfile);
+    private static userRepo = AppDataSource.getRepository(User);
+
     static async create(eventReportDto: EventReportDto, reporterId: string) {
-        const eventRepo = AppDataSource.getRepository(EventReport);
-        const profileRepo = AppDataSource.getRepository(ReporterProfile);
+        const eventRepo = this.eventRepo;
+        const profileRepo = this.profileRepo;
+        const userRepo = this.userRepo;
 
         let reporterProfile;
 
@@ -42,35 +47,40 @@ export class EventReportService {
             createdAt: eventReportDto.reporterInfo.reportDate
         } as DeepPartial<EventReport>);
 
-        await updateRankIfNeeded(reporterId);
+        await userRepo.increment({ id: reporterId }, "reportsCount", 1);
+        const user = await userRepo.findOne({ where: { id: reporterId } });
+        await updateRankIfNeeded(user!);
         await eventRepo.save(eventReport);
+
         return eventReport;
     }
+
     static async update(eventReportDto: EventReportDtoWithId, reporterId: string) {
-        const eventRepo = AppDataSource.getRepository(EventReport);
+        const eventRepo = this.eventRepo;
+        const userRepo = this.userRepo;
+
         const existingReport = await eventRepo.findOne({
             where: { id: eventReportDto.id },
             relations: ["reporterProfile"]
         });
-        if (!existingReport) throw new Error("האירוע לא נמצא");
 
+        if (!existingReport) throw new Error("האירוע לא נמצא");
 
         existingReport.eventInfo = { ...existingReport.eventInfo, ...eventReportDto.eventInfo };
         existingReport.summaryInfo = { ...existingReport.summaryInfo, ...eventReportDto.summaryInfo };
         existingReport.reporterProfile = { ...existingReport.reporterProfile, ...eventReportDto.reporterInfo };
-        await AppDataSource.getRepository(User)
-            .increment({ id: reporterId }, "updatesCount", 1);
 
-
+        await userRepo.increment({ id: reporterId }, "updatesCount", 1);
+        const user = await userRepo.findOne({ where: { id: reporterId } });
+        await updateRankIfNeeded(user!);
         await eventRepo.save(existingReport);
         return existingReport;
     }
 
-
-
-
     static async delete(eventReportId: string, reporterId: string) {
-        const eventRepo = AppDataSource.getRepository(EventReport);
+        const eventRepo = this.eventRepo;
+        const userRepo = this.userRepo;
+
         const existingReport = await eventRepo.findOne({
             where: { id: eventReportId },
             relations: ["images"]
@@ -82,9 +92,8 @@ export class EventReportService {
             for (const img of existingReport.images) {
                 if (img.filePath) {
                     try {
-                       const fullPath = path.join(__dirname, "..", "..", "public", img.filePath);
-                        console.log(fullPath)
-                        fs.unlinkSync(fullPath); 
+                        const fullPath = path.join(__dirname, "..", "..", "public", img.filePath);
+                        fs.unlinkSync(fullPath);
                     } catch (err) {
                         console.error("שגיאה במחיקת קובץ:", err);
                     }
@@ -93,79 +102,79 @@ export class EventReportService {
         }
 
         await eventRepo.remove(existingReport);
-        await AppDataSource.getRepository(User)
-            .increment({ id: reporterId }, "deletesCount", 1);
-
+        await userRepo.increment({ id: reporterId }, "deletesCount", 1);
+        const user = await userRepo.findOne({ where: { id: reporterId } });
+        await updateRankIfNeeded(user!);
+        
         return existingReport;
     }
 
-
-
     static async getAll(options: {
-    page: number;
-    perPage: number;
-    filters?: {
-        q?: string;
-        dateFrom?: string;
-        dateTo?: string;
-        status?: string;
-    };
-    user: { id: string; rank: string };
-}) {
-    const { page, perPage, filters, user } = options;
-    const repo = AppDataSource.getRepository(EventReport);
+        page: number;
+        perPage: number;
+        filters?: {
+            q?: string;
+            dateFrom?: string;
+            dateTo?: string;
+            status?: string;
+        };
+        user: { id: string; rank: string };
+    }) {
+        const { page, perPage, filters, user } = options;
+        const repo = this.eventRepo;
 
-    const query = repo
-        .createQueryBuilder("report")
-        .leftJoinAndSelect("report.reporter", "reporter")
-        .leftJoinAndSelect("report.reporterProfile", "profile")
-        .leftJoinAndSelect("report.eventInfo", "eventInfo")
-        .leftJoinAndSelect("report.summaryInfo", "summaryInfo")
-        .leftJoinAndSelect("report.images", "images")
-        .orderBy("report.createdAt", "DESC");
+        const query = repo
+            .createQueryBuilder("report")
+            .leftJoinAndSelect("report.reporter", "reporter")
+            .leftJoinAndSelect("report.reporterProfile", "profile")
+            .leftJoinAndSelect("report.eventInfo", "eventInfo")
+            .leftJoinAndSelect("report.summaryInfo", "summaryInfo")
+            .leftJoinAndSelect("report.images", "images")
+            .orderBy("report.createdAt", "DESC");
 
-    if (filters?.dateFrom) {
-        query.andWhere("report.createdAt >= :dateFrom", {
-            dateFrom: filters.dateFrom,
-        });
+        if (filters?.dateFrom) {
+            query.andWhere("report.createdAt >= :dateFrom", {
+                dateFrom: filters.dateFrom,
+            });
+        }
+
+        if (filters?.dateTo) {
+            query.andWhere("report.createdAt <= :dateTo", {
+                dateTo: filters.dateTo,
+            });
+        }
+
+        if (filters?.q) {
+            const q = `%${filters.q}%`;
+
+            query.andWhere(`
+                eventInfo.category LIKE :q
+                OR summaryInfo.eventStatus LIKE :q
+                OR profile.subUnit LIKE :q
+                OR reporter.fullName LIKE :q
+            `, { q });
+        }
+
+        if (user.rank === "טוראי") {
+            query.andWhere("report.reporterId = :userId", { userId: user.id });
+        }
+
+        const total = await query.getCount();
+        const data = await query
+            .skip((page - 1) * perPage)
+            .take(perPage)
+            .getMany();
+
+        const formattedData = data.map(formatEventReportForClient);
+
+        return {
+            data: formattedData,
+            pagination: {
+                page,
+                perPage,
+                total,
+                totalPages: Math.ceil(total / perPage),
+            },
+        };
     }
-
-    if (filters?.dateTo) {
-        query.andWhere("report.createdAt <= :dateTo", {
-            dateTo: filters.dateTo,
-        });
-    }
-
-    if (filters?.q) {
-        const q = `%${filters.q}%`;
-
-        query.andWhere(`
-   eventInfo.category LIKE :q
-    OR summaryInfo.eventStatus LIKE :q
-    OR profile.subUnit LIKE :q
-    OR reporter.fullName LIKE :q
-  `, { q });
-    }
-
-    if (user.rank === "טוראי") {
-        query.andWhere("report.reporterId = :userId", { userId: user.id });
-    }
-
-    const total = await query.getCount();
-    const data = await query
-        .skip((page - 1) * perPage)
-        .take(perPage)
-        .getMany();
-
-    const formattedData = data.map(formatEventReportForClient);
-    return {
-        data: formattedData,
-        pagination: {
-            page,
-            perPage,
-            total,
-            totalPages: Math.ceil(total / perPage),
-        },
-    };
-}
 }

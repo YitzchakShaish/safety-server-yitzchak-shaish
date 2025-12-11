@@ -32,4 +32,7 @@ export class User {
   @Column({ type: "int", default: 0 })
   deletesCount: number;
 
+  @Column({ type: "int", default: 0 })
+  reportsCount: number;
+
 }
