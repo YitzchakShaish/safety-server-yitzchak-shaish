@@ -1,37 +1,43 @@
 # Safety Event Management System - Server
 
-A backend server for managing and storing safety event reports, built with Node.js, Express, and TypeORM.
+A backend server for managing safety event reports. Built with Node.js, Express, and TypeORM.
 
-## Overview
+## What This Server Does
 
-This server provides a RESTful API for the safety event management system. It handles:
+This is the server-side (backend) part of the safety event management system. It provides:
 
-- User authentication and authorization
-- Storing and retrieving safety event reports
-- User management and rank-based permissions
-- Database operations using SQLite
+- User authentication (login and signup)
+- API endpoints for managing safety event reports
+- Storage and retrieval of event data
+- User management with rank-based permissions
+- Image upload handling for event reports
+- Statistics and overview data
+- SQLite database for data storage
 
 ## Technologies Used
 
-- **Node.js** – JavaScript runtime environment
-- **Express** – Web framework for building the API
-- **TypeScript** – Adds static typing for improved reliability
-- **TypeORM** – Object-Relational Mapping library for database operations
-- **SQLite** – Lightweight database for storing data
-- **JWT (JSON Web Tokens)** – Used for user authentication
-- **Class Validator** – Validates incoming request data
-- **CORS** – Enables cross-origin requests from the client
+- **Node.js** - JavaScript runtime environment
+- **Express** - Web framework for building the API
+- **TypeScript** - Adds type checking for better code quality
+- **TypeORM** - Database management and operations
+- **SQLite** - Lightweight database for storing data
+- **JWT (JSON Web Tokens)** - User authentication
+- **Class Validator** - Validates incoming request data
+- **Multer** - Handles file uploads (images)
+- **CORS** - Allows requests from the client application
+- **Cookie Parser** - Handles authentication cookies
 
 ## Getting Started
 
-### Prerequisites
+### What You Need
 
-Make sure you have **Node.js** installed.  
-It can be downloaded from the official website: https://nodejs.org/
+You need **Node.js** installed on your computer.  
+Download it from: https://nodejs.org/
 
 ### Installation
 
-Install all required dependencies:
+1. Open a terminal in the `safety-server-yitzchak-shaish` folder
+2. Install all required packages:
 
 ```bash
 npm install
@@ -39,14 +45,14 @@ npm install
 
 ### Environment Variables
 
-Create a `.env` file in the root directory (optional):
+You can create a `.env` file in the root directory (optional):
 
 ```env
 PORT=3000
 JWT_SECRET=your-secret-key-here
 ```
 
-**Important:** The client application expects the server to run on port `3000`. Make sure to set `PORT=3000` in your `.env` file.
+**Important:** The client expects the server to run on port `3000`. Make sure to set `PORT=3000` in your `.env` file.
 
 If you don't create a `.env` file, the server will use default values:
 - Port: `8080` (you should change this to `3000` to match the client)
@@ -60,17 +66,19 @@ Start the development server:
 npm run dev
 ```
 
-The server will run at `http://localhost:3000` (or the port you specified in `.env`). Make sure the port matches what the client expects.
+The server will run at `http://localhost:3000` (or the port you specified in `.env`).
+
+**Important:** Make sure the port matches what the client expects (`3000`).
 
 ### Building for Production
 
-Compile TypeScript to JavaScript:
+1. Compile TypeScript to JavaScript:
 
 ```bash
 npm run build
 ```
 
-Start the production server:
+2. Start the production server:
 
 ```bash
 npm start
@@ -86,51 +94,137 @@ The server uses TypeORM for database management. Migrations are handled automati
 
 ## Project Structure
 
-- **src/app.ts** – Main application entry point
-- **src/config/** – Configuration files (database connection, environment variables)
-- **src/controllers/** – Request handlers for different routes
-- **src/dto/** – Data Transfer Objects for validating incoming requests
-- **src/entities/** – Database entity models (User, EventReport, etc.)
-- **src/middlewares/** – Custom middleware functions (authentication, validation)
-- **src/routes/** – API route definitions
-- **src/services/** – Business logic and data processing
-- **src/utils/** – Utility functions (authentication helpers, data formatting)
-- **src/validators/** – Custom validation functions
-- **src/db/** – SQLite database file location
+- **src/app.ts** - Main application entry point, sets up Express server
+
+- **src/config/** - Configuration files
+  - `datasource.ts` - Database connection configuration
+  - `index.ts` - Environment variables and configuration
+  - `multer.ts` - File upload configuration
+
+- **src/controllers/** - Request handlers
+  - `auth.controller.ts` - Login and signup logic
+  - `eventReport.controller.ts` - Event report CRUD operations
+  - `overview.controller.ts` - Statistics and overview data
+  - `reportImages.controller.ts` - Image upload handling
+  - `user.controller.ts` - User management
+
+- **src/dto/** - Data Transfer Objects (request validation)
+  - `EventReport.dto.ts` - Event report creation/update validation
+  - `User.dto.ts` - User registration/login validation
+
+- **src/entities/** - Database models
+  - User, EventReport, and other database tables
+
+- **src/middlewares/** - Custom middleware functions
+  - `auth.middleware.ts` - Authentication and authorization checks
+  - `validateBody.middleware.ts` - Request body validation
+  - `checkUserExists.middleware.ts` - User existence checks
+
+- **src/routes/** - API route definitions
+  - `auth.router.ts` - Authentication routes
+  - `eventReport.router.ts` - Event report routes
+  - `overview.routes.ts` - Statistics routes
+  - `reportImages.routes.ts` - Image upload routes
+  - `user.router.ts` - User management routes
+
+- **src/services/** - Business logic and data processing
+
+- **src/utils/** - Utility functions
+
+- **src/validators/** - Custom validation functions
+
+- **src/db/** - SQLite database file location (`database.sqlite`)
 
 ## API Endpoints
 
 ### Authentication
 
-- **POST /auth/signup** – Create a new user account
-- **POST /auth/login** – Login and receive authentication token
+- **POST /auth/signup** - Create a new user account
+  - Requires: username, password, fullName, rank
+  - Returns: User information and authentication token
+
+- **POST /auth/login** - Login to the system
+  - Requires: username, password
+  - Returns: User information and authentication token
 
 ### Event Reports
 
-- **POST /event-report** – Create a new event report (requires authentication)
-- **PUT /event-report** – Update an existing event report (requires authentication)
-- **DELETE /event-report/:id** – Delete an event report (requires authentication)
-- **GET /event-reports** – Get all event reports with pagination and filters (requires authentication)
+- **POST /event-report** - Create a new event report (requires authentication)
+  - Requires: Event report data in request body
+  - Returns: Created event report
+
+- **PUT /event-report** - Update an existing event report (requires authentication)
+  - Requires: Event report data with ID in request body
+  - Returns: Updated event report
+
+- **DELETE /event-report/:id** - Delete an event report (requires authentication)
+  - Requires: Event report ID in URL
+  - Returns: Success message
+
+- **GET /event-reports** - Get all event reports (requires authentication)
+  - Supports pagination and filtering via query parameters
+  - Returns: List of event reports
+
+### Images
+
+- **POST /reports/:reportId/images** - Upload images for an event report
+  - Requires: Form data with image files (up to 10 images)
+  - Returns: Success message
+
+### Overview/Statistics
+
+- **GET /overview** - Get statistics and overview data (requires authentication)
+  - Returns: Statistics about events (total reports, events by status, etc.)
 
 ### Users
 
-- User management endpoints are available through `/users` routes
+- **GET /users/get-all** - Get all users (requires authentication)
+  - Returns: List of all users
 
-## Features
+- **GET /users/:id** - Get user by ID
+  - Returns: User information
 
-- **JWT Authentication** – Secure token-based user authentication
-- **Request Validation** – Automatic validation of incoming request data
-- **Rank-Based Permissions** – User roles and permissions system
-- **Database Integration** – SQLite database with TypeORM for data persistence
-- **Error Handling** – Proper error responses for invalid requests
-- **CORS Support** – Allows requests from the client application
-- **Static File Serving** – Serves uploaded images from the public folder
+## Main Features
 
-## Notes
+### Authentication
+- JWT token-based authentication
+- Tokens sent via cookies and Authorization headers
+- Middleware to protect routes that require authentication
+- User rank-based permission system
 
-- The server uses SQLite database stored in `src/db/database.sqlite`
+### Request Validation
+- All incoming requests are validated using DTOs (Data Transfer Objects)
+- Invalid requests return proper error messages
+- Uses class-validator for validation
+
+### Database
+- SQLite database stored in `src/db/database.sqlite`
+- TypeORM for database operations
+- Automatic table creation on first run
+- Support for database migrations
+
+### File Uploads
+- Image uploads handled with Multer
+- Images stored in `public/uploads` directory
+- Supports multiple images per event report (up to 10)
+- Images served as static files
+
+### Error Handling
+- Proper error responses for invalid requests
+- 404 handler for non-existent routes
+- Error messages in Hebrew
+
+### CORS Support
+- Configured to allow requests from the client application
+- Supports credentials (cookies)
+
+## Important Notes
+
+- The server uses SQLite database - the database file is created automatically
 - Authentication tokens are sent via cookies and Authorization headers
 - All event report endpoints require valid authentication
+- Image uploads are stored in `public/uploads` directory
+- Images are served from `/uploads` and `/images` routes
 - The server automatically creates database tables on first run
-- Image uploads are stored in the `public/images` directory
-
+- Default port is 8080, but should be set to 3000 to match the client
+- The server includes rank-based permissions for different user roles

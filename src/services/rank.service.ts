@@ -13,15 +13,17 @@ export async function updateRankIfNeeded(user: User) {
         (user.reportsCount || 0) +
         (user.updatesCount || 0) +
         (user.deletesCount || 0);
-    const steps = Math.floor(totalActions / 5);
 
-    const currentIndex = RANK_ORDER.indexOf(user.rank);
-    const newIndex = Math.min(currentIndex + steps, RANK_ORDER.length - 1);
+    const targetIndex = Math.min(
+        Math.floor(totalActions / 5),
+        RANK_ORDER.length - 1
+    );
 
-    if (newIndex !== currentIndex) {
-        user.rank = RANK_ORDER[newIndex];
+    if (user.rank !== RANK_ORDER[targetIndex]) {
+        user.rank = RANK_ORDER[targetIndex];
         await userRepo.save(user);
     }
 
     return user;
 }
+
