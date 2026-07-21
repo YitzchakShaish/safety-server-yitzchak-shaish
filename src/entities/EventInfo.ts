@@ -43,4 +43,13 @@ export class EventInfo {
 
   @Column({ type: "text" })
   weatherCondition: WeatherCondition;
+
+  @Column({ type: "text", nullable: true })
+  address: string | null;
+
+  @Column({ type: "float", nullable: true })
+  latitude: number | null;
+
+  @Column({ type: "float", nullable: true })
+  longitude: number | null;
 }

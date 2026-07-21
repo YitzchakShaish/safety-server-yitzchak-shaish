@@ -1,7 +1,9 @@
 import {
   IsString,
   IsNotEmpty,
-  IsEnum
+  IsEnum,
+  IsOptional,
+  IsNumber
 } from "class-validator";
 
 import {
@@ -56,4 +58,16 @@ export class EventInfoDto {
   @IsEnum(WeatherCondition, { message: 'ערך לא תקין עבור מצב מזג האוויר' })
   @IsNotEmpty({ message: 'מצב מזג האוויר הוא שדה חובה' })
   weatherCondition: WeatherCondition;
+
+  @IsOptional()
+  @IsString({ message: 'כתובת האירוע חייבת להיות מחרוזת' })
+  address?: string;
+
+  @IsOptional()
+  @IsNumber({}, { message: 'קו רוחב לא תקין' })
+  latitude?: number;
+
+  @IsOptional()
+  @IsNumber({}, { message: 'קו אורך לא תקין' })
+  longitude?: number;
 }
