@@ -13,6 +13,8 @@ This is the server-side (backend) part of the safety event management system. It
 - Image upload handling for event reports
 - Statistics and overview data
 - SQLite database for data storage
+- Address search and reverse geocoding (proxy to OpenStreetMap Nominatim)
+- Automatic historical weather lookup for an event's date, time and location (proxy to Open-Meteo)
 
 ## Technologies Used
 
@@ -26,6 +28,13 @@ This is the server-side (backend) part of the safety event management system. It
 - **Multer** - Handles file uploads (images)
 - **CORS** - Allows requests from the client application
 - **Cookie Parser** - Handles authentication cookies
+
+## External APIs
+
+The server integrates with two free, external, key-less APIs to enrich event reports with location and weather data. Both are called from the server (not directly from the client) to keep the integration centralized and CORS-safe.
+
+- **OpenStreetMap Nominatim** (`https://nominatim.openstreetmap.org`) - Address search and reverse geocoding (turning coordinates into a readable address)
+- **Open-Meteo** (`https://archive-api.open-meteo.com`, with a fallback to `https://api.open-meteo.com` for very recent dates) - Hourly historical weather data (condition + temperature) for a given date, time and coordinates
 
 ## Getting Started
 
@@ -107,13 +116,15 @@ The server uses TypeORM for database management. Migrations are handled automati
   - `overview.controller.ts` - Statistics and overview data
   - `reportImages.controller.ts` - Image upload handling
   - `user.controller.ts` - User management
+  - `geo.controller.ts` - Address search and reverse geocoding
+  - `weather.controller.ts` - Historical weather lookup
 
 - **src/dto/** - Data Transfer Objects (request validation)
   - `EventReport.dto.ts` - Event report creation/update validation
   - `User.dto.ts` - User registration/login validation
 
 - **src/entities/** - Database models
-  - User, EventReport, and other database tables
+  - User, EventReport, EventInfo (includes optional `address`, `latitude`, `longitude`), ReporterProfile, EventImage, SummaryInfo
 
 - **src/middlewares/** - Custom middleware functions
   - `auth.middleware.ts` - Authentication and authorization checks
@@ -126,6 +137,8 @@ The server uses TypeORM for database management. Migrations are handled automati
   - `overview.routes.ts` - Statistics routes
   - `reportImages.routes.ts` - Image upload routes
   - `user.router.ts` - User management routes
+  - `geo.router.ts` - Address search / reverse geocoding routes
+  - `weather.router.ts` - Weather lookup route
 
 - **src/services/** - Business logic and data processing
 
@@ -184,6 +197,20 @@ The server uses TypeORM for database management. Migrations are handled automati
 - **GET /users/:id** - Get user by ID
   - Returns: User information
 
+### Location & Weather (external API proxies)
+
+- **GET /geo/search?q=** - Search for an address (proxies OpenStreetMap Nominatim)
+  - Requires: `q` query parameter (search text), minimum 2 characters
+  - Returns: List of matching addresses with display name and coordinates
+
+- **GET /geo/reverse?lat=&lon=** - Turn coordinates into a readable address (reverse geocoding)
+  - Requires: `lat`, `lon` query parameters
+  - Returns: Address matching the given coordinates
+
+- **GET /weather?lat=&lon=&date=&time=** - Get the historical weather condition and temperature for a specific location, date and hour
+  - Requires: `lat`, `lon`, `date` (YYYY-MM-DD) query parameters; `time` (HH:mm) is optional, defaults to `12:00`
+  - Returns: Weather condition (mapped to the app's Hebrew weather categories) and temperature in Celsius
+
 ## Main Features
 
 ### Authentication
@@ -208,6 +235,11 @@ The server uses TypeORM for database management. Migrations are handled automati
 - Images stored in `public/uploads` directory
 - Supports multiple images per event report (up to 10)
 - Images served as static files
+
+### Location & Weather
+- Address search and reverse geocoding proxied through OpenStreetMap Nominatim
+- Hourly historical weather lookup proxied through Open-Meteo, matched to the event's exact date and time
+- Both are proxied from the server so no API key is exposed to the client and CORS is avoided
 
 ### Error Handling
 - Proper error responses for invalid requests
