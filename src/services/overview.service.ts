@@ -33,7 +33,7 @@ export const overviewService = async () => {
     const highPriorityEvents = await eventRepo
         .createQueryBuilder("event")
         .leftJoin("event.eventInfo", "eventInfo")
-        .where("eventInfo.EventSeverity = :severity", { severity: "חמור" })
+        .where("eventInfo.eventSeverity = :severity", { severity: "חמור" })
         .getCount();
 
     return {

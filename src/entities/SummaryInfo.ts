@@ -9,7 +9,7 @@ export class SummaryInfo {
   @Column({ type: 'text', nullable: true })
   injuryLevel?: InjuryLevel;
 
-  @Column("text")
+  @Column({ type: "text", nullable: true })
   injuryDetails?: string;
 
   @Column("text")
