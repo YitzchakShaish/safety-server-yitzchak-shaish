@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
-dotenv.config();  
+dotenv.config();
 
 export const config = {
-  port: process.env.PORT || 3007,
-  userRoute: process.env.USER_ROUTE || '/api/users2'
+  port: process.env.PORT || 8080,
+  secretString: process.env.JWT_SECRET || "secrateString123456789secrateString"
 };
