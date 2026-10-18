@@ -5,7 +5,7 @@ import { config } from "../config";
 const secretString = config.secretString!
 
 export function generateToken(payload: object, secret: string = secretString): string {
-    return jwt.sign(payload, secret, { expiresIn: "1h" });
+    return jwt.sign(payload, secret, { expiresIn: "3h" });
 }
 
 export function verifyToken(token: string, secret: string = secretString): { id: string, rank: string } {
