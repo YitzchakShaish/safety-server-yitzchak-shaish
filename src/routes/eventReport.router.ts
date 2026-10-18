@@ -12,11 +12,7 @@ router.post("/event-report", checkAuth, validateBody(EventReportDto), EventRepor
 router.put("/event-report", checkAuth, validateBody(EventReportDtoWithId), EventReportController.updateReport);
 router.delete("/event-report/:id", checkAuth, EventReportController.deleteReport);
 
-// router.get(
-//   "/event-report/:id",
-//   checkAuth,
-//   EventReportController.getReportById
-// );
+router.get("/event-report/:id", checkAuth, EventReportController.getReportById);
 
 router.get(
   "/event-reports",

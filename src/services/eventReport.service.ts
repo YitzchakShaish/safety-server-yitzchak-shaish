@@ -15,6 +15,16 @@ export class EventReportService {
     private static profileRepo = AppDataSource.getRepository(ReporterProfile);
     private static userRepo = AppDataSource.getRepository(User);
 
+    static async getById(id: string, userId: string) {
+        const user = await this.userRepo.findOne({ where: { id: userId } });
+        if (!user) return null;
+        // Keep the existing list visibility policy, using the current database rank.
+        const report = await this.eventRepo.findOne({
+            where: user.rank === "טוראי" ? { id, reporter: { id: userId } } : { id }
+        });
+        return report ? formatEventReportForClient(report) : null;
+    }
+
     static async create(eventReportDto: EventReportDto, reporterId: string) {
         const eventRepo = this.eventRepo;
         const profileRepo = this.profileRepo;
