@@ -1,12 +1,14 @@
 import { Router } from "express";
-import { getAllUsers, getUserById } from "../controllers/user.controller";
-import { checkAuth } from "../middlewares/auth.middleware";
+import { getAllUsers, getUserById, getCurrentUser, updateUser } from "../controllers/user.controller";
+import { checkAuth, checkRole } from "../middlewares/auth.middleware";
+import { UserRole } from "../enums/UserRole";
+import { validateBody } from "../middlewares/validateBody.middleware";
+import { ManageUserDto } from "../dto/ManageUser.dto";
 
 const router = Router();
-
-router.get("/get-all", checkAuth, getAllUsers);
-
-router.get("/:id", getUserById);
-
-
+router.use(checkAuth);
+router.get("/me", getCurrentUser);
+router.get("/get-all", checkRole([UserRole.Admin]), getAllUsers);
+router.get("/:id", checkRole([UserRole.Admin]), getUserById);
+router.put("/:id", checkRole([UserRole.Admin]), validateBody(ManageUserDto), updateUser);
 export default router;

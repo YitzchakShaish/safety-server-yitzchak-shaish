@@ -5,7 +5,8 @@ import { EventReportDto } from "../dto/EventReport.dto";
 import { EventReport } from "../entities/EventReport";
 import { ReporterProfile } from "../entities/ReporterProfile";
 import { DeepPartial } from "typeorm";
-import { updateRankIfNeeded } from "./rank.service";
+import { UserRole } from "../enums/UserRole";
+import { SessionUser, reportScope } from "../utils/permissions";
 import { formatEventReportForClient } from "../utils/formatEventReport";
 import { EventReportDtoWithId } from "../dto/EventReportWithId.dto";
 import { User } from "../entities/User";
@@ -18,9 +19,9 @@ export class EventReportService {
     static async getById(id: string, userId: string) {
         const user = await this.userRepo.findOne({ where: { id: userId } });
         if (!user) return null;
-        // Keep the existing list visibility policy, using the current database rank.
+        // Resolve access from the current database role.
         const report = await this.eventRepo.findOne({
-            where: user.rank === "טוראי" ? { id, reporter: { id: userId } } : { id }
+            where: { id, ...reportScope(user) }
         });
         return report ? formatEventReportForClient(report) : null;
     }
@@ -53,13 +54,11 @@ export class EventReportService {
             reporter: { id: reporterId },
             reporterProfile,
             eventInfo: eventReportDto.eventInfo,
-            summaryInfo: eventReportDto.summaryInfo,
+            summaryInfo: { ...eventReportDto.summaryInfo, eventStatus: "לא טופל" },
             createdAt: eventReportDto.reporterInfo.reportDate
         } as DeepPartial<EventReport>);
 
         await userRepo.increment({ id: reporterId }, "reportsCount", 1);
-        const user = await userRepo.findOne({ where: { id: reporterId } });
-        await updateRankIfNeeded(user!);
         await eventRepo.save(eventReport);
 
         return eventReport;
@@ -78,11 +77,14 @@ export class EventReportService {
 
         existingReport.eventInfo = { ...existingReport.eventInfo, ...eventReportDto.eventInfo };
         existingReport.summaryInfo = { ...existingReport.summaryInfo, ...eventReportDto.summaryInfo };
-        existingReport.reporterProfile = { ...existingReport.reporterProfile, ...eventReportDto.reporterInfo };
+        const actor = await userRepo.findOneByOrFail({ id: reporterId });
+        if (actor.role === UserRole.Admin) {
+            const { phone, position, unit, subUnit } = eventReportDto.reporterInfo;
+            // A report profile can be shared: create a snapshot instead of changing other reports.
+            existingReport.reporterProfile = this.profileRepo.create({ phone, position, unit, subUnit, user: existingReport.reporter });
+        }
 
         await userRepo.increment({ id: reporterId }, "updatesCount", 1);
-        const user = await userRepo.findOne({ where: { id: reporterId } });
-        await updateRankIfNeeded(user!);
         await eventRepo.save(existingReport);
         return existingReport;
     }
@@ -113,8 +115,6 @@ export class EventReportService {
 
         await eventRepo.remove(existingReport);
         await userRepo.increment({ id: reporterId }, "deletesCount", 1);
-        const user = await userRepo.findOne({ where: { id: reporterId } });
-        await updateRankIfNeeded(user!);
         
         return existingReport;
     }
@@ -128,7 +128,7 @@ export class EventReportService {
             dateTo?: string;
             status?: string;
         };
-        user: { id: string; rank: string };
+        user: SessionUser;
     }) {
         const { page, perPage, filters, user } = options;
         const repo = this.eventRepo;
@@ -158,17 +158,20 @@ export class EventReportService {
             const q = `%${filters.q}%`;
 
             query.andWhere(`
-                eventInfo.category LIKE :q
+                (eventInfo.category LIKE :q
                 OR summaryInfo.eventStatus LIKE :q
                 OR profile.subUnit LIKE :q
-                OR reporter.fullName LIKE :q
+                OR reporter.fullName LIKE :q)
             `, { q });
         }
 
-        if (user.rank === "טוראי") {
+        if (user.role === UserRole.User || (user.role === UserRole.SafetyOfficer && !user.unit)) {
             query.andWhere("report.reporterId = :userId", { userId: user.id });
         }
 
+        if (user.role === UserRole.SafetyOfficer && user.unit) {
+            query.andWhere("profile.unit = :unit", { unit: user.unit });
+        }
         const total = await query.getCount();
         const data = await query
             .skip((page - 1) * perPage)

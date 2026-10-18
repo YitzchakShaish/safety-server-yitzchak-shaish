@@ -1,7 +1,10 @@
+import { AppDataSource } from "../config/datasource";
+import { User } from "../entities/User";
+import { UserRole } from "../enums/UserRole";
 import { Request, Response, NextFunction } from "express";
 import { verifyToken } from "../utils/auth";
 
-export function checkAuth(req: Request, res: Response, next: NextFunction) {
+export async function checkAuth(req: Request, res: Response, next: NextFunction) {
 
     const token =
         req.headers["authorization"]?.split(" ")[1] || // Bearer token
@@ -14,7 +17,9 @@ export function checkAuth(req: Request, res: Response, next: NextFunction) {
 
     try {
         const decoded = verifyToken(token);
-        req.user = { id: decoded.id, rank: decoded.rank };
+        const user = await AppDataSource.getRepository(User).findOne({ where: { id: decoded.id } });
+        if (!user) return res.status(401).json({ message: "יש להתחבר מחדש" });
+        req.user = { id: user.id, rank: user.rank, role: user.role, unit: user.unit };
 
         return next();
     } catch (err) {
@@ -27,16 +32,11 @@ export function checkAuth(req: Request, res: Response, next: NextFunction) {
     }
 }
 
-export function checkRank(ranks: string[]) {
-  return (req: Request, res: Response, next: NextFunction) => {
-    try {
-      if (!req.user || !ranks.includes(req.user.rank)) {
-        return res.status(403).json({ message: "אין הרשאה לבצע את הפעולה" });
-      }
-
-      return next();
-    } catch (err) {
-      return res.status(403).json({ message: "טוקן לא תקין – אין גישה" });
-    }
-  };
+export function checkRole(roles: UserRole[]) {
+    return (req: Request, res: Response, next: NextFunction) => {
+        if (!req.user || !roles.includes(req.user.role)) {
+            return res.status(403).json({ message: "אין הרשאה לבצע את הפעולה" });
+        }
+        return next();
+    };
 }

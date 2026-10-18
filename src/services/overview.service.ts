@@ -1,45 +1,14 @@
 import { EventReport } from "../entities/EventReport";
 import { AppDataSource } from "../config/datasource";
+import { reportScope, SessionUser } from "../utils/permissions";
 
-
-export const overviewService = async () => {
-    const eventRepo = AppDataSource.getRepository(EventReport);
-
-    const totalEvents = await eventRepo.count();
-
-
-    const now = new Date();
-    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
-    const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
-
-    console.log("Start of Day:", startOfDay);
-    console.log("End of Day:", endOfDay);
-
-    const completedToday = await eventRepo
-        .createQueryBuilder("event")
-        .leftJoin("event.summaryInfo", "summary")
-        .where("summary.eventStatus = :status", { status: "טופל" })
-        .andWhere("event.updatedAt BETWEEN :start AND :end", { start: startOfDay, end: endOfDay })
-        .select("DISTINCT event.id")
-        .getCount();
-
-
-    const openEvents = await eventRepo
-        .createQueryBuilder("event")
-        .leftJoin("event.summaryInfo", "summary")
-        .where("summary.eventStatus != :status", { status: "טופל" })
-        .getCount();
-
-    const highPriorityEvents = await eventRepo
-        .createQueryBuilder("event")
-        .leftJoin("event.eventInfo", "eventInfo")
-        .where("eventInfo.eventSeverity = :severity", { severity: "חמור" })
-        .getCount();
-
+export const overviewService = async (user: SessionUser) => {
+    const reports = await AppDataSource.getRepository(EventReport).find({ where: reportScope(user) });
+    const today = new Date().toDateString();
     return {
-        totalEvents,
-        completedToday,
-        openEvents,
-        highPriorityEvents
+        totalEvents: reports.length,
+        completedToday: reports.filter(r => r.summaryInfo.eventStatus === "טופל" && new Date(r.updatedAt).toDateString() === today).length,
+        openEvents: reports.filter(r => r.summaryInfo.eventStatus !== "טופל").length,
+        highPriorityEvents: reports.filter(r => r.eventInfo.eventSeverity === "חמור" && r.summaryInfo.eventStatus !== "טופל").length
     };
 };
