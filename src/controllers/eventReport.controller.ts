@@ -93,7 +93,7 @@ export class EventReportController {
       const reporterId = req.user!.id;
       const eventReportId = req.params.id; 
 
-      if (!eventReportId || !isUUID(eventReportId)) {
+      if (typeof eventReportId !== "string" || !isUUID(eventReportId)) {
         return res.status(400).json({ message: "ID לא חוקי" });
       }
 

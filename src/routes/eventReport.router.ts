@@ -2,7 +2,7 @@ import { Router } from "express";
 import { validateBody } from "../middlewares/validateBody.middleware";
 import { EventReportDto } from "../dto/EventReport.dto";
 import { EventReportController } from "../controllers/eventReport.controller";
-import { checkAuth, checkRank } from "../middlewares/auth.middleware";
+import { checkAuth } from "../middlewares/auth.middleware";
 import { EventReportDtoWithId } from "../dto/EventReportWithId.dto";
 
 
