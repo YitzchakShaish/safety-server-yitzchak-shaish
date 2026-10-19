@@ -3,6 +3,13 @@ import { UserRole } from "../enums/UserRole";
 import { UserAudit } from "../entities/UserAudit";
 import { AppDataSource } from "../config/datasource";
 import { User } from "../entities/User";
+import {
+    AVATAR_MISSING_MESSAGE,
+    assertAvatarFile,
+    avatarPublicUrl,
+    removeStoredAvatar,
+    removeUploadedAvatar,
+} from "../utils/avatarFile";
 
 
 export class UserService {
@@ -25,6 +32,44 @@ export class UserService {
             await manager.getRepository(UserAudit).save({ actorId, userId: id, before, after });
             return user;
         });
+    }
+
+    async setAvatar(userId: string, file: Express.Multer.File) {
+        let saved = false;
+        try {
+            const filename = assertAvatarFile(file);
+            const nextUrl = avatarPublicUrl(filename);
+            let previous: string | null = null;
+            const user = await AppDataSource.transaction(async manager => {
+                const repo = manager.getRepository(User);
+                const found = await repo.findOneBy({ id: userId });
+                if (!found) throw new Error("המשתמש לא נמצא");
+                previous = found.avatarUrl ?? null;
+                found.avatarUrl = nextUrl;
+                return repo.save(found);
+            });
+            saved = true;
+            if (previous && previous !== nextUrl) removeStoredAvatar(previous);
+            return user;
+        } catch (err) {
+            if (!saved) removeUploadedAvatar(file.path);
+            throw err;
+        }
+    }
+
+    async removeAvatar(userId: string) {
+        let previous: string | null = null;
+        const user = await AppDataSource.transaction(async manager => {
+            const repo = manager.getRepository(User);
+            const found = await repo.findOneBy({ id: userId });
+            if (!found) throw new Error("המשתמש לא נמצא");
+            if (!found.avatarUrl) throw new Error(AVATAR_MISSING_MESSAGE);
+            previous = found.avatarUrl;
+            found.avatarUrl = null;
+            return repo.save(found);
+        });
+        removeStoredAvatar(previous);
+        return user;
     }
 
     async getAllUsers() {
