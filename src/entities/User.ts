@@ -26,6 +26,9 @@ export class User {
   @Column({ default: "" })
   position: string;
 
+  @Column({ type: "text", nullable: true })
+  avatarUrl: string | null;
+
   @OneToMany(() => EventReport, report => report.reporter)
   reports: EventReport[];
 

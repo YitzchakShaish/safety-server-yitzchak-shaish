@@ -1,5 +1,10 @@
 import { UserService } from "../services/user.service";
 import { Request, Response } from "express";
+import {
+    AVATAR_REMOVED_MESSAGE,
+    AVATAR_REQUIRED_MESSAGE,
+    AVATAR_UPDATED_MESSAGE,
+} from "../utils/avatarFile";
 
 const userService = new UserService();
 
@@ -47,5 +52,32 @@ export async function updateUser(req: Request, res: Response) {
         return res.json({ data: user, message: "פרטי המשתמש עודכנו" });
     } catch (err) {
         return res.status(400).json({ message: err instanceof Error ? err.message : "שגיאה בעדכון משתמש" });
+    }
+}
+
+function avatarErrorStatus(message: string) {
+    return message === "המשתמש לא נמצא" ? 404 : 400;
+}
+
+export async function uploadProfilePicture(req: Request, res: Response) {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: AVATAR_REQUIRED_MESSAGE });
+        }
+        const user = await userService.setAvatar(req.user!.id, req.file);
+        return res.status(200).json({ message: AVATAR_UPDATED_MESSAGE, data: user });
+    } catch (err) {
+        const message = err instanceof Error ? err.message : "שגיאה בעדכון תמונת הפרופיל";
+        return res.status(avatarErrorStatus(message)).json({ message });
+    }
+}
+
+export async function removeProfilePicture(req: Request, res: Response) {
+    try {
+        const user = await userService.removeAvatar(req.user!.id);
+        return res.status(200).json({ message: AVATAR_REMOVED_MESSAGE, data: user });
+    } catch (err) {
+        const message = err instanceof Error ? err.message : "שגיאה בהסרת תמונת הפרופיל";
+        return res.status(avatarErrorStatus(message)).json({ message });
     }
 }
