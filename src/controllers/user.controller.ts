@@ -24,7 +24,7 @@ export async function getAllUsers(_req: Request, res: Response) {
 
 
 export async function getUserById(req: Request, res: Response) {
-  const id = parseInt(req.params.id);
+  const id = String(req.params.id);
   const result = await userService.getUserById(id);
 
   if (!result.success) {
