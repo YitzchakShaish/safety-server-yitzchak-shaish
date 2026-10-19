@@ -7,7 +7,6 @@ export function checkAuth(req: Request, res: Response, next: NextFunction) {
         req.headers["authorization"]?.split(" ")[1] || // Bearer token
         req.cookies?.token ||
         req.body?.token;
-    console.log(token)
 
     if (!token) {
         return res.status(401).json({ message: "אין טוקן – התחבר מחדש" });
@@ -19,7 +18,12 @@ export function checkAuth(req: Request, res: Response, next: NextFunction) {
 
         return next();
     } catch (err) {
-        return res.status(403).json({ message: "טוקן לא תקין – אין גישה" });
+        const expired = err instanceof Error && err.name === "TokenExpiredError";
+        res.clearCookie("token", { httpOnly: true, sameSite: "lax" });
+        return res.status(401).json({
+            code: expired ? "TOKEN_EXPIRED" : "INVALID_TOKEN",
+            message: expired ? "תוקף ההתחברות פג – יש להתחבר מחדש" : "ההתחברות אינה תקפה – יש להתחבר מחדש"
+        });
     }
 }
 

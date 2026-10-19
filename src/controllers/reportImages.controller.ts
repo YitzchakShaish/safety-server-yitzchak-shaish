@@ -5,6 +5,9 @@ import { ReportImagesService } from "../services/reportImages.service";
 export const uploadReportImages = async (req: Request, res: Response) => {
   try {
     const reportId = req.params.reportId;
+    if (typeof reportId !== "string") {
+      return res.status(400).json({ message: "ID לא חוקי" });
+    }
     const files = req.files as Express.Multer.File[];
 
     const savedImages = await ReportImagesService.saveReportImages(reportId, files);

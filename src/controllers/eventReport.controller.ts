@@ -8,6 +8,20 @@ import { EventReportDtoWithId } from "../dto/EventReportWithId.dto";
 
 export class EventReportController {
 
+  static async getReportById(req: Request, res: Response) {
+    const id = req.params.id;
+    if (typeof id !== "string" || !isUUID(id)) {
+      return res.status(400).json({ message: "ID לא חוקי" });
+    }
+    try {
+      const report = await EventReportService.getById(id, req.user!.id);
+      if (!report) return res.status(404).json({ message: "האירוע לא נמצא או שאין הרשאה לצפות בו" });
+      return res.status(200).json({ data: report });
+    } catch {
+      return res.status(500).json({ message: "שגיאה בטעינת האירוע" });
+    }
+  }
+
   static async createReport(req: Request, res: Response) {
     try {
       const reporterId = req.user!.id;
@@ -93,7 +107,7 @@ export class EventReportController {
       const reporterId = req.user!.id;
       const eventReportId = req.params.id; 
 
-      if (!eventReportId || !isUUID(eventReportId)) {
+      if (typeof eventReportId !== "string" || !isUUID(eventReportId)) {
         return res.status(400).json({ message: "ID לא חוקי" });
       }
 
