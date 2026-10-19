@@ -23,6 +23,9 @@ export function formatEventReportForClient(report: EventReport) {
       eventSeverity: report.eventInfo?.eventSeverity || "",
       eventResult: report.eventInfo?.eventResult || "",
       weatherCondition: report.eventInfo?.weatherCondition || "",
+      address: report.eventInfo?.address ?? null,
+      latitude: report.eventInfo?.latitude ?? null,
+      longitude: report.eventInfo?.longitude ?? null,
     },
     summaryInfo: {
       eventStatus: report.summaryInfo?.eventStatus || "",

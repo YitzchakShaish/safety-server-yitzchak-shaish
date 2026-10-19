@@ -5,6 +5,8 @@ import { Request, Response, NextFunction } from "express";
 import {
     AVATAR_FIELD_NAME,
     AVATAR_MAX_BYTES,
+    AVATAR_REJECTED_MESSAGE,
+    AVATAR_SIZE_MESSAGE,
     AVATAR_TYPE_MESSAGE,
     avatarUploadErrorMessage,
     getAvatarDir,
@@ -23,12 +25,54 @@ const storage = multer.diskStorage({
     },
     filename: (_req, file, cb) => {
         const unique = Date.now() + "-" + Math.round(Math.random() * 1e9);
-        const ext = path.extname(file.originalname);
+        const ext = path.extname(file.originalname).toLowerCase();
         cb(null, `${unique}${ext}`);
     },
 });
 
-export const upload = multer({ storage });
+const eventImageParser = multer({
+    storage,
+    limits: { fileSize: AVATAR_MAX_BYTES, files: 10 },
+    fileFilter: (_req, file, cb) => {
+        if (!isAllowedAvatarUpload(file.mimetype, file.originalname)) {
+            cb(new Error(AVATAR_TYPE_MESSAGE));
+            return;
+        }
+        cb(null, true);
+    },
+});
+
+function removeUploadedEventImages(files: Express.Multer.File[] | undefined) {
+    const root = path.resolve(uploadDir);
+    for (const file of files ?? []) {
+        const resolved = path.resolve(file.path);
+        if (!resolved.startsWith(root + path.sep)) continue;
+        try {
+            fs.unlinkSync(resolved);
+        } catch {
+            // The file is already gone.
+        }
+    }
+}
+
+function eventImageErrorMessage(err: unknown): string {
+    if (err instanceof multer.MulterError) {
+        if (err.code === "LIMIT_FILE_SIZE") return AVATAR_SIZE_MESSAGE;
+        return AVATAR_REJECTED_MESSAGE;
+    }
+    if (err instanceof Error && (err.message === AVATAR_TYPE_MESSAGE || err.message === AVATAR_SIZE_MESSAGE)) {
+        return err.message;
+    }
+    return AVATAR_REJECTED_MESSAGE;
+}
+
+export function uploadEventImages(req: Request, res: Response, next: NextFunction) {
+    eventImageParser.array("images", 10)(req, res, (err?: unknown) => {
+        if (!err) return next();
+        removeUploadedEventImages(req.files as Express.Multer.File[] | undefined);
+        return res.status(400).json({ message: eventImageErrorMessage(err) });
+    });
+}
 
 const avatarStorage = multer.diskStorage({
     destination: (_req, _file, cb) => {

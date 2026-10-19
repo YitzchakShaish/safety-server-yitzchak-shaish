@@ -34,17 +34,21 @@ export class EventReportService {
         let reporterProfile;
 
         if (eventReportDto.reporterInfo) {
+            const reporterInfo = eventReportDto.reporterInfo;
+            // Omitted subUnit must stay in the lookup. TypeORM drops undefined
+            // conditions, which would attach another report's profile.
+            const subUnit = reporterInfo.subUnit ?? "";
             reporterProfile = await profileRepo.findOne({
                 where: {
                     user: { id: reporterId },
-                    unit: eventReportDto.reporterInfo.unit,
-                    subUnit: eventReportDto.reporterInfo.subUnit,
-                    position: eventReportDto.reporterInfo.position
+                    unit: reporterInfo.unit,
+                    subUnit,
+                    position: reporterInfo.position
                 }
             });
 
             if (!reporterProfile) {
-                reporterProfile = profileRepo.create(eventReportDto.reporterInfo);
+                reporterProfile = profileRepo.create({ ...reporterInfo, subUnit });
                 reporterProfile.user = { id: reporterId } as any;
                 await profileRepo.save(reporterProfile);
             }
@@ -143,13 +147,14 @@ export class EventReportService {
             .orderBy("report.createdAt", "DESC");
 
         if (filters?.dateFrom) {
-            query.andWhere("report.createdAt >= :dateFrom", {
+            query.andWhere("date(eventInfo.eventDate) >= date(:dateFrom)", {
                 dateFrom: filters.dateFrom,
             });
         }
 
         if (filters?.dateTo) {
-            query.andWhere("report.createdAt <= :dateTo", {
+            // dateTo is a calendar day; the next-day bound includes that whole day.
+            query.andWhere("date(eventInfo.eventDate) < date(:dateTo, '+1 day')", {
                 dateTo: filters.dateTo,
             });
         }

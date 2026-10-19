@@ -118,6 +118,9 @@ export class EventReportController {
       });
 
     } catch (err: any) {
+      if (err?.message === "האירוע לא נמצא") {
+        return res.status(404).json({ message: "האירוע לא נמצא" });
+      }
       return res.status(500).json({ message: err.message || "שגיאה פנימית בשרת" });
     }
   }
