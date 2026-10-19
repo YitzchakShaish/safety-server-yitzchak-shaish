@@ -17,7 +17,12 @@ function load(file, requireMock) {
 
 const auth = load('src/utils/auth.ts', name => name === 'jsonwebtoken'
     ? jwt : { config: { secretString: secret } });
-const { checkAuth, checkRank } = load('src/middlewares/auth.middleware.ts', () => auth);
+const { checkAuth, checkRole } = load('src/middlewares/auth.middleware.ts', name => {
+    if (name.includes('datasource')) return { AppDataSource: { getRepository: () => ({ findOne: async () => ({ id: 'user', rank: 'basic', role: 'user', unit: '' }) }) } };
+    if (name.includes('UserRole')) return { UserRole: { User: 'user', Admin: 'admin' } };
+    if (name.includes('entities/User')) return { User: class {} };
+    return auth;
+});
 
 function response() {
     return { statusCode: 200, status(code) { this.statusCode = code; return this; },
@@ -33,29 +38,29 @@ test('new tokens are valid for three hours and verify successfully', () => {
     assert.throws(() => jwt.verify(token, secret, { clockTimestamp: decoded.exp + 1 }));
 });
 
-test('expired and incorrectly signed tokens return 401', () => {
+test('expired and incorrectly signed tokens return 401', async () => {
     for (const [token, code] of [
         [jwt.sign({ id: 'user' }, secret, { expiresIn: -1 }), 'TOKEN_EXPIRED'],
         [jwt.sign({ id: 'user' }, 'wrong-secret'), 'INVALID_TOKEN']
     ]) {
         const res = response();
-        checkAuth({ headers: { authorization: `Bearer ${token}` } }, res,
+        await checkAuth({ headers: { authorization: `Bearer ${token}` } }, res,
             () => assert.fail('must not authenticate'));
         assert.equal(res.statusCode, 401);
         assert.equal(res.body.code, code);
     }
 });
 
-test('valid token proceeds; missing token is 401; insufficient rank stays 403', () => {
+test('valid token proceeds; missing token is 401; insufficient rank stays 403', async () => {
     const req = { headers: { authorization: `Bearer ${auth.generateToken({ id: 'user', rank: 'basic' })}` } };
     let called = false;
-    checkAuth(req, response(), () => { called = true; });
+    await checkAuth(req, response(), () => { called = true; });
     assert.equal(called, true);
     assert.equal(req.user.id, 'user');
     const missing = response();
-    checkAuth({ headers: {} }, missing, () => assert.fail());
+    await checkAuth({ headers: {} }, missing, () => assert.fail());
     assert.equal(missing.statusCode, 401);
     const denied = response();
-    checkRank(['admin'])(req, denied, () => assert.fail());
+    checkRole(['admin'])(req, denied, () => assert.fail());
     assert.equal(denied.statusCode, 403);
 });

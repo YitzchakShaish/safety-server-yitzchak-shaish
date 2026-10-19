@@ -11,7 +11,8 @@
     "typeorm": "typeorm-ts-node-commonjs",
     "migration:generate": "npm run typeorm migration:generate -- -d src/config/datasource.ts",
     "migration:run": "typeorm-ts-node-commonjs migration:run -d src/config/datasource.ts",
-    "migration:revert": "npm run typeorm migration:revert"
+    "migration:revert": "npm run typeorm migration:revert",
+    "admin:set": "ts-node src/scripts/set-admin.ts"
   },
   "keywords": [],
   "author": "",

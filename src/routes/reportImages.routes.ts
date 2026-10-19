@@ -1,3 +1,4 @@
+import { reportAccess } from "../middlewares/reportAccess.middleware";
 import { Router } from "express";
 import { uploadReportImages } from "../controllers/reportImages.controller";
 import { upload } from "../config/multer";
@@ -8,6 +9,7 @@ const router = Router();
 router.post(
   "/:reportId/images",
   checkAuth,
+  reportAccess(true),
   upload.array("images", 10),
   uploadReportImages
 );

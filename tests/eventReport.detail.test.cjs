@@ -16,6 +16,8 @@ function loadService(user, reports) {
         require: name => {
             if (name.endsWith('/User')) return { User };
             if (name.endsWith('/EventReport')) return { EventReport };
+            if (name.includes('permissions')) return { reportScope: user => user.role === 'admin' ? {} : { reporter: { id: 'user' } } };
+            if (name.includes('UserRole')) return { UserRole: { User: 'user', Admin: 'admin' } };
             if (name.includes('datasource')) return { AppDataSource: {
                 getRepository: entity => entity === User
                     ? { findOne: async () => user }
@@ -33,16 +35,16 @@ function loadService(user, reports) {
 const reports = [{ id: 'own', reporter: { id: 'user' } }, { id: 'other', reporter: { id: 'other-user' } }];
 
 test('basic user can load own report but not another report', async () => {
-    const service = loadService({ rank: 'טוראי' }, reports);
+    const service = loadService({ role: 'user' }, reports);
     assert.equal((await service.getById('own', 'user')).id, 'own');
     assert.equal(await service.getById('other', 'user'), null);
 });
 
 test('missing user and missing report return no data', async () => {
     assert.equal(await loadService(null, reports).getById('own', 'user'), null);
-    assert.equal(await loadService({ rank: 'סמל' }, reports).getById('missing', 'user'), null);
+    assert.equal(await loadService({ role: 'admin' }, reports).getById('missing', 'user'), null);
 });
 
-test('current elevated database rank follows existing list policy', async () => {
-    assert.equal((await loadService({ rank: 'סמל' }, reports).getById('other', 'user')).id, 'other');
+test('administrator can load reports across users', async () => {
+    assert.equal((await loadService({ role: 'admin' }, reports).getById('other', 'user')).id, 'other');
 });

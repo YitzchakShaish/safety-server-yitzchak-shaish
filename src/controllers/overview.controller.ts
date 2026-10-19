@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
 import { overviewService } from "../services/overview.service";
 
-export const getOverviewStatsController = async (_req: Request, res: Response) => {
+export const getOverviewStatsController = async (req: Request, res: Response) => {
   try {
-    const stats = await overviewService();
+    const stats = await overviewService(req.user!);
     
     res.status(200).json({
       success: true,
