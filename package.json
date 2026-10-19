@@ -12,7 +12,9 @@
     "migration:generate": "npm run typeorm migration:generate -- -d src/config/datasource.ts",
     "migration:run": "typeorm-ts-node-commonjs migration:run -d src/config/datasource.ts",
     "migration:revert": "npm run typeorm migration:revert",
-    "admin:set": "ts-node src/scripts/set-admin.ts"
+    "admin:set": "ts-node src/scripts/set-admin.ts",
+    "seed:demo": "ts-node src/scripts/seed-demo.ts",
+    "dev:demo": "ts-node-dev --respawn --transpile-only src/scripts/demo.ts"
   },
   "keywords": [],
   "author": "",
